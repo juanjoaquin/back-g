@@ -38,7 +38,9 @@ func main() {
 
 	router := mux.NewRouter()
 
-	userEndpoint := user.MakeEndpoints()
+	// Al haber hecho lo de la capa de servicio. Va a necesitar recibir un servicio, nosotros debemos especificarlo
+	userService := user.NewService() // Este userService se lo debemos pasar al endpoint
+	userEndpoint := user.MakeEndpoints(userService)
 
 	router.HandleFunc("/users", userEndpoint.GetAll).Methods("GET")
 	router.HandleFunc("/users", userEndpoint.Create).Methods("POST")

@@ -44,20 +44,22 @@ type (
 )
 
 // 3. Esta es la función de MakeEndpoints, que va a devolver una estructura de Edpoints. Estos son los que vamos a poder utilizar en nuestro dominio.
-func MakeEndpoints() Endpoints {
+
+// Ahora le pasaremos el Service. Este lo tendra como prop. También lo recibira todas las funciones que encapsula.
+func MakeEndpoints(s Service) Endpoints {
 	// Returnamos los endpoints
 	return Endpoints{
 		// Debemos indicar que cada endpoint representa cada funcion
-		Create: makeCreateEndpoint(),
-		GetAll: makeGetAllEndpoint(),
-		Get:    makeGetEndpoint(),
-		Update: makeUpdateEndpoint(),
-		Delete: makeDeleteEndpoint(),
+		Create: makeCreateEndpoint(s),
+		GetAll: makeGetAllEndpoint(s),
+		Get:    makeGetEndpoint(s),
+		Update: makeUpdateEndpoint(s),
+		Delete: makeDeleteEndpoint(s),
 	}
 }
 
 // Estas seran una funcion privada, ya que empiezan con minuscula, porque el que vamos a usar es el de arriba
-func makeDeleteEndpoint() Controller {
+func makeDeleteEndpoint(s Service) Controller {
 	// Definimos la funcion del Controller, que seria la que esta arriba de todo del Controller
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Aqui ira nuestra logica del endpoint
@@ -67,7 +69,8 @@ func makeDeleteEndpoint() Controller {
 }
 
 // Create Endpoint
-func makeCreateEndpoint() Controller {
+// Aqui tambien le pasaremos ese servicio
+func makeCreateEndpoint(s Service) Controller {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// Aca llamamos el struct que hicimos del CreateReq (que se encuentra dentro del Type)
@@ -90,12 +93,19 @@ func makeCreateEndpoint() Controller {
 			return
 		}
 
+		// Vamos a returnar la capa de Servicio que tenemos. En este caso sería: s.Create() con el Body que le habiamos pasado.
+		err := s.Create(req.FirstName, req.LastName, req.Phone, req.Email)
+		if err != nil {
+			w.WriteHeader(400)
+			json.NewEncoder(w).Encode(ErrorRes{err.Error()})
+		}
+
 		json.NewEncoder(w).Encode(req)
 	}
 }
 
 // Get All Endpoint
-func makeGetAllEndpoint() Controller {
+func makeGetAllEndpoint(s Service) Controller {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("get all user")
 		json.NewEncoder(w).Encode(map[string]bool{"ok": true})
@@ -103,7 +113,7 @@ func makeGetAllEndpoint() Controller {
 }
 
 // Get by id endpoint
-func makeGetEndpoint() Controller {
+func makeGetEndpoint(s Service) Controller {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("get user")
 		json.NewEncoder(w).Encode(map[string]bool{"ok": true})
@@ -111,7 +121,7 @@ func makeGetEndpoint() Controller {
 }
 
 // Update endpoint
-func makeUpdateEndpoint() Controller {
+func makeUpdateEndpoint(s Service) Controller {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("update user")
 		json.NewEncoder(w).Encode(map[string]bool{"ok": true})
