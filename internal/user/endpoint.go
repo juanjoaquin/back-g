@@ -34,6 +34,13 @@ type (
 		Email     string `json:"email"`
 		Phone     string `json:"phone"`
 	}
+
+	/*
+		5. Vamos a generar un struct para los errores de las response:
+	*/
+	ErrorRes struct {
+		Error string `json:"error"`
+	}
 )
 
 // 3. Esta es la función de MakeEndpoints, que va a devolver una estructura de Edpoints. Estos son los que vamos a poder utilizar en nuestro dominio.
@@ -71,6 +78,15 @@ func makeCreateEndpoint() Controller {
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			// Con esto manejamos el error. Debemos utilizar el parametro: w http.ResponseWriter, que tenemos ahi en el param
 			w.WriteHeader(400)
+			// 6. Aca le pasamos el Error struct que hicimos previamente
+			json.NewEncoder(w).Encode(ErrorRes{"Invalid request format"})
+			return
+		}
+
+		// Para pasarlo como Bad Request a uno de los campos, debemos hacerlo asi:
+		if req.FirstName == "" {
+			w.WriteHeader(400)
+			json.NewEncoder(w).Encode(ErrorRes{"First name is required"})
 			return
 		}
 
