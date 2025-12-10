@@ -29,6 +29,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/juanjoaquin/back-g/internal/user" // Importamos el package user
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 func main() {
@@ -37,6 +39,25 @@ func main() {
 	// http.HandleFunc("/courses", getCourses)
 
 	router := mux.NewRouter()
+
+	/* 	 Conexion base de datos desde nuestro codigo.
+	-Debemos estear la dsn, que son las creedenciales que le pasamos a GORM para pasarle la base de datos
+	*/
+	dsn := fmt.Sprintf("%s:%s@(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
+		"root",
+		"root",
+		"127.0.0.1",
+		"3320",
+		"go_backend")
+	/* Para la conexion a la DB, debemos usar el gorm package
+	Con la funcion Open, y el package mysql
+	*/
+	db, _ := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	db = db.Debug() // Seteamos en modo debug para que nos vaya mostrando
+
+	/*  Ahora hacemos un auto migrate. Que es para que GORM nos cree las tablas de nuestra db */
+	/* Debemos pasarle la entidad correspondiente. En este caso, nosotros queremos crear la entidad de User */
+	_ = db.AutoMigrate(&user.User{})
 
 	// Al haber hecho lo de la capa de servicio. Va a necesitar recibir un servicio, nosotros debemos especificarlo
 	userService := user.NewService() // Este userService se lo debemos pasar al endpoint
