@@ -24,6 +24,7 @@ Es la base de datos
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -41,6 +42,10 @@ func main() {
 	// http.HandleFunc("/courses", getCourses)
 
 	router := mux.NewRouter()
+
+	// Esto fue después de la conexion de la DB
+	/* Debemos definir nuestro Logger que importamos en el service como en el repo */
+	l := log.New(os.Stdout, "", log.LstdFlags|log.Lshortfile)
 
 	/* 	 Conexion base de datos desde nuestro codigo.
 	-Debemos estear la dsn, que son las creedenciales que le pasamos a GORM para pasarle la base de datos
@@ -66,10 +71,10 @@ func main() {
 	_ = db.AutoMigrate(&user.User{})
 
 	// Ahora generamos el Repo del User
-	userRepository := user.NewRepo(db)
+	userRepository := user.NewRepo(l, db) // Importamos el Logger (l)
 
 	// Al haber hecho lo de la capa de servicio. Va a necesitar recibir un servicio, nosotros debemos especificarlo
-	userService := user.NewService(userRepository) // Este userService se lo debemos pasar al endpoint. En este caso, le pasamos el repository
+	userService := user.NewService(l, userRepository) // Este userService se lo debemos pasar al endpoint. En este caso, le pasamos el repository // Importamos el Logger (l)
 	userEndpoint := user.MakeEndpoints(userService)
 
 	router.HandleFunc("/users", userEndpoint.GetAll).Methods("GET")

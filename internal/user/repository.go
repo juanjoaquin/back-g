@@ -1,7 +1,7 @@
 package user
 
 import (
-	"fmt"
+	"log"
 
 	"gorm.io/gorm"
 )
@@ -12,19 +12,21 @@ type Repository interface {
 
 // Esta struct va hacer referencia a la DB de GORM
 type repo struct {
-	db *gorm.DB
+	log *log.Logger
+	db  *gorm.DB
 }
 
 // Creamos una funcion que va a instanciar este repo.
 
-func NewRepo(db *gorm.DB) Repository {
+func NewRepo(log *log.Logger, db *gorm.DB) Repository {
 	return &repo{
-		db: db,
+		log: log,
+		db:  db,
 	}
 }
 
 // Creamos el Metodo Create
 func (repo *repo) Create(user *User) error {
-	fmt.Println(user)
+	repo.log.Println(user) // Este loguer es el que nosotros le hemos pasado. Es lo que imprimira al pegarle al POST
 	return nil
 }

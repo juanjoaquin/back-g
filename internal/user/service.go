@@ -11,6 +11,7 @@ type Service interface {
 
 /* 2. Vamos a definir una struct, está sera en privado */
 type service struct {
+	log *log.Logger
 	// Ahora debemos pasar el Repository
 	repo Repository
 }
@@ -19,8 +20,9 @@ type service struct {
  3. Haremos una funcion llamada: NewService
     Esta lo que hara sera crear un nuevo servicio, que esta ser la interface.
 */
-func NewService(repo Repository) Service {
+func NewService(log *log.Logger, repo Repository) Service {
 	return &service{
+		log:  log,
 		repo: repo,
 	}
 }
@@ -28,7 +30,7 @@ func NewService(repo Repository) Service {
 /* 4. Vamos a generar un metodo, que esto se lo deberemos pasar a la funcion de NewService. */
 func (s service) Create(firstName, lastName, email, phone string) error {
 
-	log.Println("Create user service")
+	s.log.Println("Create user service")
 	/* Una vez pasado el repo, dentro de nuestro create. Debemos pasarle el repository. Debemos ejecutar el metodo Create del propio Repo */
 	s.repo.Create(&User{})
 	return nil
