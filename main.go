@@ -25,10 +25,14 @@ Es la base de datos
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 	"github.com/juanjoaquin/back-g/internal/user" // Importamos el package user
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 func main() {
@@ -37,6 +41,29 @@ func main() {
 	// http.HandleFunc("/courses", getCourses)
 
 	router := mux.NewRouter()
+
+	/* 	 Conexion base de datos desde nuestro codigo.
+	-Debemos estear la dsn, que son las creedenciales que le pasamos a GORM para pasarle la base de datos
+	*/
+	// Con esto emparejamos a las variables de entorno y las levanta. Esto con el package go get github.com/joho/godotenv
+	_ = godotenv.Load()
+	dsn := fmt.Sprintf("%s:%s@(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
+		// Con el elemento de: os. Es donde nos emparejamos a las ENV
+		os.Getenv("DATABASE_USER"),
+		os.Getenv("DATABASE_PASSWORD"),
+		os.Getenv("DATABASE_HOST"),
+		os.Getenv("DATABASE_PORT"),
+		os.Getenv("DATABASE_NAME"))
+
+	/* Para la conexion a la DB, debemos usar el gorm package
+	Con la funcion Open, y el package mysql
+	*/
+	db, _ := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	db = db.Debug() // Seteamos en modo debug para que nos vaya mostrando
+
+	/*  Ahora hacemos un auto migrate. Que es para que GORM nos cree las tablas de nuestra db */
+	/* Debemos pasarle la entidad correspondiente. En este caso, nosotros queremos crear la entidad de User */
+	_ = db.AutoMigrate(&user.User{})
 
 	// Al haber hecho lo de la capa de servicio. Va a necesitar recibir un servicio, nosotros debemos especificarlo
 	userService := user.NewService() // Este userService se lo debemos pasar al endpoint
