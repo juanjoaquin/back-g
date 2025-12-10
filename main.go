@@ -65,8 +65,11 @@ func main() {
 	/* Debemos pasarle la entidad correspondiente. En este caso, nosotros queremos crear la entidad de User */
 	_ = db.AutoMigrate(&user.User{})
 
+	// Ahora generamos el Repo del User
+	userRepository := user.NewRepo(db)
+
 	// Al haber hecho lo de la capa de servicio. Va a necesitar recibir un servicio, nosotros debemos especificarlo
-	userService := user.NewService() // Este userService se lo debemos pasar al endpoint
+	userService := user.NewService(userRepository) // Este userService se lo debemos pasar al endpoint. En este caso, le pasamos el repository
 	userEndpoint := user.MakeEndpoints(userService)
 
 	router.HandleFunc("/users", userEndpoint.GetAll).Methods("GET")
