@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 type (
@@ -107,16 +109,39 @@ func makeCreateEndpoint(s Service) Controller {
 // Get All Endpoint
 func makeGetAllEndpoint(s Service) Controller {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("get all user")
-		json.NewEncoder(w).Encode(map[string]bool{"ok": true})
+		// Debemos hacer referencia al GetAll del Service
+		users, err := s.GetAll()
+
+		// Si el error es != nill, manejamos con el w.WirteHeader la Bad Request
+		if err != nil {
+			w.WriteHeader(400)
+			json.NewEncoder(w).Encode(ErrorRes{err.Error()})
+			return
+		}
+
+		json.NewEncoder(w).Encode(users)
 	}
 }
 
 // Get by id endpoint
 func makeGetEndpoint(s Service) Controller {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("get user")
-		json.NewEncoder(w).Encode(map[string]bool{"ok": true})
+
+		// Se debe crear una variable y guardar el ID como parametro
+
+		//Gorilla Max con Vars le pasamos nuestra request, y esta nos devuelve un path con los parametros
+		path := mux.Vars(r)    // Aqui llamamos a mux (Gorilla Mux),Vars(r) / La r es el http.Request como parametro que tenemos
+		id := path["id"]       // Especificamos que queremos el ID
+		user, err := s.Get(id) // Declaramos al user, y llamamos al service ( s.Get() )
+
+		if err != nil {
+			w.WriteHeader(404)
+			json.NewEncoder(w).Encode(ErrorRes{"Usuario no encontrado"})
+			return
+		}
+
+		json.NewEncoder(w).Encode(user)
+
 	}
 }
 
