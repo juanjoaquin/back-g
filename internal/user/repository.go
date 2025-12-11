@@ -8,7 +8,9 @@ import (
 )
 
 type Repository interface {
-	Create(user *User) error // Le pasamos como puntero al User
+	Create(user *User) error      // Le pasamos como puntero al User
+	GetAll() ([]User, error)      // El Get all, nos devuelve un array de usuarios
+	Get(id string) (*User, error) // El Get by ID, nos devuelve un ID, y un puntero de User
 }
 
 // Esta struct va hacer referencia a la DB de GORM
@@ -52,4 +54,40 @@ func (repo *repo) Create(user *User) error {
 	repo.log.Println("User creado exitosamente", user.ID)
 
 	return nil
+}
+
+// Creamo el Metodo Get All
+func (repo *repo) GetAll() ([]User, error) {
+	var u []User // Declaramos la variable user. Que sera un vector de usuarios
+
+	/* Utilizamos la funcion de nuestro repo, para tener la DB, y ejecutar el metodo "Model"
+	Con esto especificamos el Modelo que vamos a utilizar. En este caso el User, con su puntero */
+	result := repo.db.Model(&u).Order("created_at desc").Find(&u) // Le aplicamos un orderBy, y un Find para encontrar el user
+
+	// Hanldeamos el error
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	// Returnamos el user y el nil
+	return u, nil
+
+}
+
+// Creamo el Metodo Get By ID
+func (repo *repo) Get(id string) (*User, error) {
+	/* Primero debemos generar una estructura User para poder pasarle el ID a GORM */
+	user := User{ID: id}
+
+	/* Para buscar la informacion, utilizamos el .First() con el puntero en el User.  */
+	result := repo.db.First(&user) // First es el primer elemento que encuentra
+
+	// Handleamos el error
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	// Devolvemos al puntero del User, tanto como el nil. No se devuelve el result
+	return &user, nil
+
 }
