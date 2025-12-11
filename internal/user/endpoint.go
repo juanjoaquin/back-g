@@ -94,13 +94,13 @@ func makeCreateEndpoint(s Service) Controller {
 		}
 
 		// Vamos a returnar la capa de Servicio que tenemos. En este caso sería: s.Create() con el Body que le habiamos pasado.
-		err := s.Create(req.FirstName, req.LastName, req.Phone, req.Email)
+		user, err := s.Create(req.FirstName, req.LastName, req.Phone, req.Email)
 		if err != nil {
 			w.WriteHeader(400)
 			json.NewEncoder(w).Encode(ErrorRes{err.Error()})
 		}
 
-		json.NewEncoder(w).Encode(req)
+		json.NewEncoder(w).Encode(user)
 	}
 }
 
