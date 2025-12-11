@@ -7,6 +7,8 @@ type Service interface {
 	/* 	1. Vamos a definirle los metodos de los Endpoints que fuimos utilizando.
 	   	Le pasaremos tambien los elementos del body del Create por ejemplo */
 	Create(firstName, lastName, email, phone string) (*User, error)
+	GetAll() ([]User, error)      // Get All
+	Get(id string) (*User, error) // Get by User ID
 }
 
 /* 2. Vamos a definir una struct, está sera en privado */
@@ -48,4 +50,32 @@ func (s service) Create(firstName, lastName, email, phone string) (*User, error)
 	}
 
 	return &user, nil
+}
+
+/* Get All de los Users */
+func (s service) GetAll() ([]User, error) {
+
+	/* Traemos a los Users y usamos nos traemos el .GetAll() de la Interface del Service (s.repo), que previamente declaramos en nuestro Repository (GetAll) */
+	users, err := s.repo.GetAll()
+
+	// Handleo error
+	if err != nil {
+		return nil, err
+	}
+
+	// Returno la entidad completa con el nil
+	return users, nil
+
+}
+
+func (s service) Get(id string) (*User, error) {
+	user, err := s.repo.Get(id)
+
+	// Handleo error
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+
 }
