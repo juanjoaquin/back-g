@@ -6,8 +6,9 @@ package user
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 type (
@@ -41,6 +42,15 @@ type (
 	ErrorRes struct {
 		Error string `json:"error"`
 	}
+
+	/* Nueva Struct  para el UPDATE */
+
+	UpdateReq struct {
+		FirstName *string `json:"first_name"`
+		LastName  *string `json:"last_name"`
+		Email     *string `json:"email"`
+		Phone     *string `json:"phone"`
+	}
 )
 
 // 3. Esta es la función de MakeEndpoints, que va a devolver una estructura de Edpoints. Estos son los que vamos a poder utilizar en nuestro dominio.
@@ -63,8 +73,22 @@ func makeDeleteEndpoint(s Service) Controller {
 	// Definimos la funcion del Controller, que seria la que esta arriba de todo del Controller
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Aqui ira nuestra logica del endpoint
-		fmt.Println("delete user")
-		json.NewEncoder(w).Encode(map[string]bool{"ok": true})
+
+		// Es parecido al de Get By Id.
+
+		// Usamos el path de Gorilla Mux
+		path := mux.Vars(r)
+		// Le pasamos el id
+		id := path["id"]
+
+		// Nos traemos el service.Delete y handleamos el error
+		if err := s.Delete(id); err != nil {
+			w.WriteHeader(404)
+			json.NewEncoder(w).Encode(ErrorRes{"No se encontro al usuario"})
+			return
+		}
+
+		json.NewEncoder(w).Encode(map[string]string{"data": "success"})
 	}
 }
 
@@ -94,36 +118,105 @@ func makeCreateEndpoint(s Service) Controller {
 		}
 
 		// Vamos a returnar la capa de Servicio que tenemos. En este caso sería: s.Create() con el Body que le habiamos pasado.
-		err := s.Create(req.FirstName, req.LastName, req.Phone, req.Email)
+		user, err := s.Create(req.FirstName, req.LastName, req.Phone, req.Email)
 		if err != nil {
 			w.WriteHeader(400)
 			json.NewEncoder(w).Encode(ErrorRes{err.Error()})
 		}
 
-		json.NewEncoder(w).Encode(req)
+		json.NewEncoder(w).Encode(user)
 	}
 }
 
 // Get All Endpoint
 func makeGetAllEndpoint(s Service) Controller {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("get all user")
-		json.NewEncoder(w).Encode(map[string]bool{"ok": true})
+		// Debemos hacer referencia al GetAll del Service
+		users, err := s.GetAll()
+
+		// Si el error es != nill, manejamos con el w.WirteHeader la Bad Request
+		if err != nil {
+			w.WriteHeader(400)
+			json.NewEncoder(w).Encode(ErrorRes{err.Error()})
+			return
+		}
+
+		json.NewEncoder(w).Encode(users)
 	}
 }
 
 // Get by id endpoint
 func makeGetEndpoint(s Service) Controller {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("get user")
-		json.NewEncoder(w).Encode(map[string]bool{"ok": true})
+
+		// Se debe crear una variable y guardar el ID como parametro
+
+		//Gorilla Max con Vars le pasamos nuestra request, y esta nos devuelve un path con los parametros
+		path := mux.Vars(r)    // Aqui llamamos a mux (Gorilla Mux),Vars(r) / La r es el http.Request como parametro que tenemos
+		id := path["id"]       // Especificamos que queremos el ID
+		user, err := s.Get(id) // Declaramos al user, y llamamos al service ( s.Get() )
+
+		if err != nil {
+			w.WriteHeader(404)
+			json.NewEncoder(w).Encode(ErrorRes{"Usuario no encontrado"})
+			return
+		}
+
+		json.NewEncoder(w).Encode(user)
+
 	}
 }
 
 // Update endpoint
 func makeUpdateEndpoint(s Service) Controller {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("update user")
+
+		// Llamamos a la struct que creamos previamente
+		var req UpdateReq
+
+		// Decodificamos el body y lo validamos
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			w.WriteHeader(400)
+			json.NewEncoder(w).Encode(ErrorRes{"Invalid request ofrmat"})
+			return
+		}
+
+		// Validamos los campos y si viene vacio
+		if req.FirstName != nil && *req.FirstName == "" {
+			w.WriteHeader(400)
+			json.NewEncoder(w).Encode(ErrorRes{"First name is required"})
+			return
+		}
+
+		if req.LastName != nil && *req.LastName == "" {
+			w.WriteHeader(400)
+			json.NewEncoder(w).Encode(ErrorRes{"Last name is required"})
+			return
+		}
+
+		if req.Email != nil && *req.Email == "" {
+			w.WriteHeader(400)
+			json.NewEncoder(w).Encode(ErrorRes{"Email is required"})
+			return
+		}
+
+		if req.Phone != nil && *req.Phone == "" {
+			w.WriteHeader(400)
+			json.NewEncoder(w).Encode(ErrorRes{"Phone is required"})
+			return
+		}
+
+		// Y aca debemos hacer lo del Gorilla Mux
+		path := mux.Vars(r)
+		id := path["id"]
+
+		// Vamos a returnar la capa de Servicio que tenemos. Pasandole el ID. En este caso sería: s.Update() con el Body que le habiamos pasado.
+		if err := s.Update(id, req.FirstName, req.LastName, req.Email, req.Phone); err != nil {
+			w.WriteHeader(404)
+			json.NewEncoder(w).Encode(ErrorRes{"User dosent exists"})
+			return
+		}
+
 		json.NewEncoder(w).Encode(map[string]bool{"ok": true})
 	}
 }

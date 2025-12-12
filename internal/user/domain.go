@@ -1,6 +1,10 @@
 package user
 
-import "time"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 // 1. Vamos a definir la struct de User con estos campos del Domain, que esta era la capa que interactuaba con la base de datos.
 // Pero evitaba que interactue directamente sin capas entre la db y las request. Esta es la tabla intermedia
@@ -12,4 +16,7 @@ type User struct {
 	Phone     string     `json:"phone" gorm:"type:char(30);not null"`
 	CreatedAt *time.Time `json:"-"`
 	UpdatedAt *time.Time `json:"-"`
+	// Agregamos el campo de Deleted, que es como un Soft Delete de GORM.
+	// Nos muestra un registro de los Soft Deleted Users
+	Deleted gorm.DeletedAt `json:"-"`
 }

@@ -78,8 +78,11 @@ func main() {
 	userEndpoint := user.MakeEndpoints(userService)
 
 	router.HandleFunc("/users", userEndpoint.GetAll).Methods("GET")
+	router.HandleFunc("/users/{id}", userEndpoint.Get).Methods("GET") // La rutas dinamicas se usan con /{"Nombre de lo que deseamos dinamico"}
+
 	router.HandleFunc("/users", userEndpoint.Create).Methods("POST")
-	router.HandleFunc("/users", userEndpoint.Update).Methods("PATCH")
+	router.HandleFunc("/users/{id}", userEndpoint.Update).Methods("PATCH")
+	router.HandleFunc("/users/{id}", userEndpoint.Delete).Methods("DELETE")
 
 	//3. Vamos a decirle, que levante y escuche y levante el PUERTO quer le vamos a pasar.
 	// Con esto usamos la funcion: http.ListenAndServe(port). Y aqui entre las (port) le pasamos el puerto.
