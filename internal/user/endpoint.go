@@ -6,7 +6,6 @@ package user
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -42,6 +41,15 @@ type (
 	*/
 	ErrorRes struct {
 		Error string `json:"error"`
+	}
+
+	/* Nueva Struct  para el UPDATE */
+
+	UpdateReq struct {
+		FirstName *string `json:"first_name"`
+		LastName  *string `json:"last_name"`
+		Email     *string `json:"email"`
+		Phone     *string `json:"phone"`
 	}
 )
 
@@ -162,7 +170,53 @@ func makeGetEndpoint(s Service) Controller {
 // Update endpoint
 func makeUpdateEndpoint(s Service) Controller {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("update user")
+
+		// Llamamos a la struct que creamos previamente
+		var req UpdateReq
+
+		// Decodificamos el body y lo validamos
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			w.WriteHeader(400)
+			json.NewEncoder(w).Encode(ErrorRes{"Invalid request ofrmat"})
+			return
+		}
+
+		// Validamos los campos y si viene vacio
+		if req.FirstName != nil && *req.FirstName == "" {
+			w.WriteHeader(400)
+			json.NewEncoder(w).Encode(ErrorRes{"First name is required"})
+			return
+		}
+
+		if req.LastName != nil && *req.LastName == "" {
+			w.WriteHeader(400)
+			json.NewEncoder(w).Encode(ErrorRes{"Last name is required"})
+			return
+		}
+
+		if req.Email != nil && *req.Email == "" {
+			w.WriteHeader(400)
+			json.NewEncoder(w).Encode(ErrorRes{"Email is required"})
+			return
+		}
+
+		if req.Phone != nil && *req.Phone == "" {
+			w.WriteHeader(400)
+			json.NewEncoder(w).Encode(ErrorRes{"Phone is required"})
+			return
+		}
+
+		// Y aca debemos hacer lo del Gorilla Mux
+		path := mux.Vars(r)
+		id := path["id"]
+
+		// Vamos a returnar la capa de Servicio que tenemos. Pasandole el ID. En este caso sería: s.Update() con el Body que le habiamos pasado.
+		if err := s.Update(id, req.FirstName, req.LastName, req.Email, req.Phone); err != nil {
+			w.WriteHeader(404)
+			json.NewEncoder(w).Encode(ErrorRes{"User dosent exists"})
+			return
+		}
+
 		json.NewEncoder(w).Encode(map[string]bool{"ok": true})
 	}
 }

@@ -10,6 +10,7 @@ type Service interface {
 	GetAll() ([]User, error)      // Get All
 	Get(id string) (*User, error) // Get by User ID
 	Delete(id string) error
+	Update(id string, firstName *string, lastName *string, email *string, phone *string) error
 }
 
 /* 2. Vamos a definir una struct, está sera en privado */
@@ -83,4 +84,8 @@ func (s service) Get(id string) (*User, error) {
 
 func (s service) Delete(id string) error {
 	return s.repo.Delete(id)
+}
+
+func (s service) Update(id string, firstName *string, lastName *string, email *string, phone *string) error {
+	return s.repo.Update(id, firstName, lastName, email, phone)
 }

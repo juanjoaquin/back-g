@@ -12,6 +12,7 @@ type Repository interface {
 	GetAll() ([]User, error)      // El Get all, nos devuelve un array de usuarios
 	Get(id string) (*User, error) // El Get by ID, nos devuelve un ID, y un puntero de User
 	Delete(id string) error
+	Update(id string, firstName *string, lastName *string, email *string, phone *string) error
 }
 
 // Esta struct va hacer referencia a la DB de GORM
@@ -108,4 +109,32 @@ func (repo *repo) Delete(id string) error {
 	// Devolvemos nil. No se devuelve el result
 	return nil
 
+}
+
+// Creamos el Metodo UPDATE
+
+func (repo *repo) Update(id string, firstName *string, lastName *string, email *string, phone *string) error {
+	values := make(map[string]interface{})
+
+	if firstName != nil {
+		values["first_name"] = *firstName
+	}
+
+	if lastName != nil {
+		values["last_name"] = *lastName
+	}
+
+	if email != nil {
+		values["email"] = *email
+	}
+
+	if phone != nil {
+		values["phone"] = *phone
+	}
+
+	if result := repo.db.Model(&User{}).Where("id = ?", id).Updates(values); result.Error != nil {
+		return result.Error
+	}
+
+	return nil
 }
