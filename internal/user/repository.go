@@ -11,6 +11,7 @@ type Repository interface {
 	Create(user *User) error      // Le pasamos como puntero al User
 	GetAll() ([]User, error)      // El Get all, nos devuelve un array de usuarios
 	Get(id string) (*User, error) // El Get by ID, nos devuelve un ID, y un puntero de User
+	Delete(id string) error
 }
 
 // Esta struct va hacer referencia a la DB de GORM
@@ -89,5 +90,22 @@ func (repo *repo) Get(id string) (*User, error) {
 
 	// Devolvemos al puntero del User, tanto como el nil. No se devuelve el result
 	return &user, nil
+
+}
+
+// Creamos el Metodo DELETE
+func (repo *repo) Delete(id string) error {
+	/* Primero debemos generar una estructura User para poder pasarle el ID a GORM */
+	user := User{ID: id}
+
+	result := repo.db.Delete(&user) // El metodo que se usa es el .DELETE
+
+	// Handleamos el error
+	if result.Error != nil {
+		return result.Error
+	}
+
+	// Devolvemos nil. No se devuelve el result
+	return nil
 
 }

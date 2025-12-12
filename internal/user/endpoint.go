@@ -65,8 +65,22 @@ func makeDeleteEndpoint(s Service) Controller {
 	// Definimos la funcion del Controller, que seria la que esta arriba de todo del Controller
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Aqui ira nuestra logica del endpoint
-		fmt.Println("delete user")
-		json.NewEncoder(w).Encode(map[string]bool{"ok": true})
+
+		// Es parecido al de Get By Id.
+
+		// Usamos el path de Gorilla Mux
+		path := mux.Vars(r)
+		// Le pasamos el id
+		id := path["id"]
+
+		// Nos traemos el service.Delete y handleamos el error
+		if err := s.Delete(id); err != nil {
+			w.WriteHeader(404)
+			json.NewEncoder(w).Encode(ErrorRes{"No se encontro al usuario"})
+			return
+		}
+
+		json.NewEncoder(w).Encode(map[string]string{"data": "success"})
 	}
 }
 
