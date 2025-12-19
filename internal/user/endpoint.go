@@ -1,4 +1,5 @@
 // Aqui vamos a generar nuestros endpoints
+// El Endpoint seria el equivalente al Controller
 
 // 1. Vamos a crear una funcion llamada "MakeEndpoints". Esta se encargara de crear nuestros endpoints
 // 2. Vamos a crear una struct, que va a tener todos los endpoints que nosotros vayamos a utilizar
@@ -140,8 +141,17 @@ func makeCreateEndpoint(s Service) Controller {
 // Get All Endpoint
 func makeGetAllEndpoint(s Service) Controller {
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		//Para obtener el Query Params
+		v := r.URL.Query()
+		// Nos traemos el SearchParams, la Struct del Service.
+		filters := Filters{
+			FirstName: v.Get("first_name"),
+			LastName:  v.Get("last_name"),
+		}
+
 		// Debemos hacer referencia al GetAll del Service
-		users, err := s.GetAll()
+		users, err := s.GetAll(filters) // Pasamos el filtro al GetAll del Service
 
 		// Si el error es != nill, manejamos con el w.WirteHeader la Bad Request
 		if err != nil {

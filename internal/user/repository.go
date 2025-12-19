@@ -1,16 +1,18 @@
 package user
 
 import (
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type Repository interface {
-	Create(user *User) error      // Le pasamos como puntero al User
-	GetAll() ([]User, error)      // El Get all, nos devuelve un array de usuarios
-	Get(id string) (*User, error) // El Get by ID, nos devuelve un ID, y un puntero de User
+	Create(user *User) error                                          // Le pasamos como puntero al User
+	GetAll(filters Filters) /* Pasamos el Filtrado */ ([]User, error) // El Get all, nos devuelve un array de usuarios
+	Get(id string) (*User, error)                                     // El Get by ID, nos devuelve un ID, y un puntero de User
 	Delete(id string) error
 	Update(id string, firstName *string, lastName *string, email *string, phone *string) error
 }
@@ -59,12 +61,20 @@ func (repo *repo) Create(user *User) error {
 }
 
 // Creamo el Metodo Get All
-func (repo *repo) GetAll() ([]User, error) {
+func (repo *repo) GetAll(filters Filters) ([]User, error) {
 	var u []User // Declaramos la variable user. Que sera un vector de usuarios
+
+	// Debemos traernos el Model del User
+	tx := repo.db.Model(u)
+	// Nos traemos el filtrado, y se lo pasamos
+	tx = applyFilters(tx, filters)
 
 	/* Utilizamos la funcion de nuestro repo, para tener la DB, y ejecutar el metodo "Model"
 	Con esto especificamos el Modelo que vamos a utilizar. En este caso el User, con su puntero */
-	result := repo.db.Model(&u).Order("created_at desc").Find(&u) // Le aplicamos un orderBy, y un Find para encontrar el user
+	/* result := repo.db.Model(&u).Order("created_at desc").Find(&u) */ // Le aplicamos un orderBy, y un Find para encontrar el user
+
+	//Ahora con el filtrado, le pasamos directamente el tx.Order, y no como esta arriba, es lo mismo, pero le aplicamos el filtrado
+	result := tx.Order("created_at desc").Find(&u)
 
 	// Hanldeamos el error
 	if result.Error != nil {
@@ -73,7 +83,9 @@ func (repo *repo) GetAll() ([]User, error) {
 
 	// Returnamos el user y el nil
 	return u, nil
-
+	//////////////////////////////////////
+	// ABAJO DE TODO APLICAMOS UNA FUNCION PARA EL APLICADO DE FILTROS
+	/////////////////////////////////////
 }
 
 // Creamo el Metodo Get By ID
@@ -137,4 +149,20 @@ func (repo *repo) Update(id string, firstName *string, lastName *string, email *
 	}
 
 	return nil
+}
+
+// FUNCION PARA EL APLICADO DE FILTROS
+func applyFilters(tx *gorm.DB, filters Filters) *gorm.DB {
+
+	if filters.FirstName != "" { // Basicamente que si viene vacio, no pasa nada, y que lo devuelva en lower o uppercase
+		filters.FirstName = fmt.Sprintf("%%%s%%", strings.ToLower(filters.FirstName))
+		tx = tx.Where("lower(first_name) like ?", filters.FirstName) // Query de GORM para la consulta
+	}
+
+	if filters.LastName != "" { // Basicamente que si viene vacio, no pasa nada, y que lo devuelva en lower o uppercase
+		filters.LastName = fmt.Sprintf("%%%s%%", strings.ToLower(filters.LastName))
+		tx = tx.Where("lower(last_name) like ?", filters.LastName) // Query de GORM para la consulta
+	}
+
+	return tx
 }

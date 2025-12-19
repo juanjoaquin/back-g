@@ -7,10 +7,16 @@ type Service interface {
 	/* 	1. Vamos a definirle los metodos de los Endpoints que fuimos utilizando.
 	   	Le pasaremos tambien los elementos del body del Create por ejemplo */
 	Create(firstName, lastName, email, phone string) (*User, error)
-	GetAll() ([]User, error)      // Get All
-	Get(id string) (*User, error) // Get by User ID
+	GetAll(filters Filters) /* Pasamos el Filtrado de params */ ([]User, error) // Get All
+	Get(id string) (*User, error)                                               // Get by User ID
 	Delete(id string) error
 	Update(id string, firstName *string, lastName *string, email *string, phone *string) error
+}
+
+// Struct de Filter params:
+type Filters struct {
+	FirstName string
+	LastName  string
 }
 
 /* 2. Vamos a definir una struct, está sera en privado */
@@ -55,10 +61,10 @@ func (s service) Create(firstName, lastName, email, phone string) (*User, error)
 }
 
 /* Get All de los Users */
-func (s service) GetAll() ([]User, error) {
+func (s service) GetAll(filters Filters) /* Pasamos el Search Params */ ([]User, error) {
 
 	/* Traemos a los Users y usamos nos traemos el .GetAll() de la Interface del Service (s.repo), que previamente declaramos en nuestro Repository (GetAll) */
-	users, err := s.repo.GetAll()
+	users, err := s.repo.GetAll(filters) // Tambien le pasamos el Search Params
 
 	// Handleo error
 	if err != nil {
