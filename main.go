@@ -74,8 +74,10 @@ func main() {
 	/* 	_ = db.AutoMigrate(&user.User{})
 	 */
 
-	// Ahora: llamamos al LOGGER de la  DB.
+	// Ahora: Llamamos al Loadder de la DB.
 	_ = godotenv.Load()
+
+	// Ahora: llamamos al LOGGER de la  DB.
 	l := bootsrap.InitLogger()
 
 	// Ahora: Hacemos la conexión a Bootsrap de la DB

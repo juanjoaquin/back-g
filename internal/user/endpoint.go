@@ -38,10 +38,11 @@ type (
 
 	/*
 		5. Vamos a generar un struct para los errores de las response:
+		DEPRECADO
 	*/
-	ErrorRes struct {
+	/* 	ErrorRes struct {
 		Error string `json:"error"`
-	}
+	} */
 
 	/* Nueva Struct  para el UPDATE */
 
@@ -50,6 +51,14 @@ type (
 		LastName  *string `json:"last_name"`
 		Email     *string `json:"email"`
 		Phone     *string `json:"phone"`
+	}
+
+	/* Struct de Response general */
+
+	Response struct {
+		Status int         `json:"status"`
+		Data   interface{} `json:"data,omitempty"` // Esto es una interface porque le podemos mandar cualquier cosa relacionada a nuestro servicio (usuario, curso, etc).
+		Err    string      `json:"err,omitempty"`  // Usamos el omitempty, esto que si viene vacio lo omite. No lo recibe.
 	}
 )
 
@@ -81,10 +90,10 @@ func makeDeleteEndpoint(s Service) Controller {
 		// Le pasamos el id
 		id := path["id"]
 
-		// Nos traemos el service.Delete y handleamos el error
+		// Nos traemos el service.Delete y handleamos el error (CON LA NUEVA STRUCT)
 		if err := s.Delete(id); err != nil {
 			w.WriteHeader(404)
-			json.NewEncoder(w).Encode(ErrorRes{"No se encontro al usuario"})
+			json.NewEncoder(w).Encode(&Response{Status: 400, Err: "Error al borrar el usuario"})
 			return
 		}
 
@@ -106,14 +115,14 @@ func makeCreateEndpoint(s Service) Controller {
 			// Con esto manejamos el error. Debemos utilizar el parametro: w http.ResponseWriter, que tenemos ahi en el param
 			w.WriteHeader(400)
 			// 6. Aca le pasamos el Error struct que hicimos previamente
-			json.NewEncoder(w).Encode(ErrorRes{"Invalid request format"})
+			json.NewEncoder(w).Encode(&Response{Status: 400, Err: "Invalid request format"})
 			return
 		}
 
 		// Para pasarlo como Bad Request a uno de los campos, debemos hacerlo asi:
 		if req.FirstName == "" {
 			w.WriteHeader(400)
-			json.NewEncoder(w).Encode(ErrorRes{"First name is required"})
+			json.NewEncoder(w).Encode(&Response{Status: 400, Err: "First name is required"})
 			return
 		}
 
@@ -121,10 +130,10 @@ func makeCreateEndpoint(s Service) Controller {
 		user, err := s.Create(req.FirstName, req.LastName, req.Phone, req.Email)
 		if err != nil {
 			w.WriteHeader(400)
-			json.NewEncoder(w).Encode(ErrorRes{err.Error()})
+			json.NewEncoder(w).Encode(&Response{Status: 400, Err: err.Error()})
 		}
 
-		json.NewEncoder(w).Encode(user)
+		json.NewEncoder(w).Encode(&Response{Status: 201, Data: user})
 	}
 }
 
@@ -137,11 +146,11 @@ func makeGetAllEndpoint(s Service) Controller {
 		// Si el error es != nill, manejamos con el w.WirteHeader la Bad Request
 		if err != nil {
 			w.WriteHeader(400)
-			json.NewEncoder(w).Encode(ErrorRes{err.Error()})
+			json.NewEncoder(w).Encode(&Response{Status: 400, Err: err.Error()})
 			return
 		}
-
-		json.NewEncoder(w).Encode(users)
+		// Lo devolvemos con la nueva struct de Response
+		json.NewEncoder(w).Encode(&Response{Status: 200, Data: users})
 	}
 }
 
@@ -158,11 +167,11 @@ func makeGetEndpoint(s Service) Controller {
 
 		if err != nil {
 			w.WriteHeader(404)
-			json.NewEncoder(w).Encode(ErrorRes{"Usuario no encontrado"})
+			json.NewEncoder(w).Encode(&Response{Status: 400, Err: "Usuario no encontrado"})
 			return
 		}
 
-		json.NewEncoder(w).Encode(user)
+		json.NewEncoder(w).Encode(&Response{Status: 200, Data: user})
 
 	}
 }
@@ -177,32 +186,32 @@ func makeUpdateEndpoint(s Service) Controller {
 		// Decodificamos el body y lo validamos
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			w.WriteHeader(400)
-			json.NewEncoder(w).Encode(ErrorRes{"Invalid request ofrmat"})
+			json.NewEncoder(w).Encode(&Response{Status: 400, Err: "Invalid request ofrmat"})
 			return
 		}
 
 		// Validamos los campos y si viene vacio
 		if req.FirstName != nil && *req.FirstName == "" {
 			w.WriteHeader(400)
-			json.NewEncoder(w).Encode(ErrorRes{"First name is required"})
+			json.NewEncoder(w).Encode(&Response{Status: 400, Err: "First name is required"})
 			return
 		}
 
 		if req.LastName != nil && *req.LastName == "" {
 			w.WriteHeader(400)
-			json.NewEncoder(w).Encode(ErrorRes{"Last name is required"})
+			json.NewEncoder(w).Encode(&Response{Status: 400, Err: "Last name is required"})
 			return
 		}
 
 		if req.Email != nil && *req.Email == "" {
 			w.WriteHeader(400)
-			json.NewEncoder(w).Encode(ErrorRes{"Email is required"})
+			json.NewEncoder(w).Encode(&Response{Status: 400, Err: "Email is required"})
 			return
 		}
 
 		if req.Phone != nil && *req.Phone == "" {
 			w.WriteHeader(400)
-			json.NewEncoder(w).Encode(ErrorRes{"Phone is required"})
+			json.NewEncoder(w).Encode(&Response{Status: 400, Err: "Phone is required"})
 			return
 		}
 
@@ -213,10 +222,10 @@ func makeUpdateEndpoint(s Service) Controller {
 		// Vamos a returnar la capa de Servicio que tenemos. Pasandole el ID. En este caso sería: s.Update() con el Body que le habiamos pasado.
 		if err := s.Update(id, req.FirstName, req.LastName, req.Email, req.Phone); err != nil {
 			w.WriteHeader(404)
-			json.NewEncoder(w).Encode(ErrorRes{"User dosent exists"})
+			json.NewEncoder(w).Encode(&Response{Status: 400, Err: "User dosent exists"})
 			return
 		}
 
-		json.NewEncoder(w).Encode(map[string]bool{"ok": true})
+		json.NewEncoder(w).Encode(&Response{Status: 200, Data: "User updated succesfully"})
 	}
 }
