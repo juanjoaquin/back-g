@@ -8,6 +8,7 @@ package user
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/juanjoaquin/back-g/internal/pkg/meta"
@@ -152,6 +153,10 @@ func makeGetAllEndpoint(s Service) Controller {
 			LastName:  v.Get("last_name"),
 		}
 
+		// Nos traemos el Limit y el Page desde las ENV.
+		limit, _ := strconv.Atoi(v.Get("limit"))
+		page, _ := strconv.Atoi(v.Get("page"))
+
 		// Aqui aplicamos el Counter que hicimos despues de todo esto
 		count, err := s.Count(filters)
 		if err != nil {
@@ -160,7 +165,7 @@ func makeGetAllEndpoint(s Service) Controller {
 			return
 		}
 		// Nos traemos el Package de Meta de la función New del propio package
-		meta, err := meta.New(count)
+		meta, err := meta.New(page, limit, count) // Le debemos pasar tanto Page & Limit
 		if err != nil {
 			w.WriteHeader(500)
 			json.NewEncoder(w).Encode(&Response{Status: 500, Err: err.Error()})
@@ -168,7 +173,7 @@ func makeGetAllEndpoint(s Service) Controller {
 		}
 
 		// Debemos hWacer referencia al GetAll del Service
-		users, err := s.GetAll(filters) // Pasamos el filtro al GetAll del Service
+		users, err := s.GetAll(filters, meta.Offset(), meta.Limit()) // Pasamos el filtro al GetAll del Service. Y tambien el Meta de Offset y Limit
 
 		// Si el error es != nill, manejamos con el w.WirteHeader la Bad Request
 		if err != nil {

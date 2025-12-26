@@ -10,9 +10,9 @@ import (
 )
 
 type Repository interface {
-	Create(user *User) error                                          // Le pasamos como puntero al User
-	GetAll(filters Filters) /* Pasamos el Filtrado */ ([]User, error) // El Get all, nos devuelve un array de usuarios
-	Get(id string) (*User, error)                                     // El Get by ID, nos devuelve un ID, y un puntero de User
+	Create(user *User) error                                                                 // Le pasamos como puntero al User
+	GetAll(filters Filters, offset int, limit int) /* Pasamos el Filtrado */ ([]User, error) // El Get all, nos devuelve un array de usuarios
+	Get(id string) (*User, error)                                                            // El Get by ID, nos devuelve un ID, y un puntero de User
 	Delete(id string) error
 	Update(id string, firstName *string, lastName *string, email *string, phone *string) error
 	Count(filters Filters) (int, error) // Devuelve la cantidad de registros
@@ -62,13 +62,15 @@ func (repo *repo) Create(user *User) error {
 }
 
 // Creamo el Metodo Get All
-func (repo *repo) GetAll(filters Filters) ([]User, error) {
+func (repo *repo) GetAll(filters Filters, offset, limit int) ([]User, error) {
 	var u []User // Declaramos la variable user. Que sera un vector de usuarios
 
 	// Debemos traernos el Model del User
 	tx := repo.db.Model(u)
 	// Nos traemos el filtrado, y se lo pasamos
 	tx = applyFilters(tx, filters)
+	// Con GORM especificamos tanto el limit & el offset
+	tx = tx.Limit(limit).Offset(offset)
 
 	/* Utilizamos la funcion de nuestro repo, para tener la DB, y ejecutar el metodo "Model"
 	Con esto especificamos el Modelo que vamos a utilizar. En este caso el User, con su puntero */
