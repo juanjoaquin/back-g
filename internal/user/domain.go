@@ -22,6 +22,7 @@ type User struct {
 	Deleted gorm.DeletedAt `json:"-"`
 }
 
+// Esta función genera un UUID al crear un User. Anteriormente esto lo hacia el Repository
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 	if u.ID == "" {
 		u.ID = uuid.New().String()
