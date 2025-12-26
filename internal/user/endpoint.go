@@ -172,7 +172,7 @@ func makeGetAllEndpoint(s Service) Controller {
 			return
 		}
 
-		// Debemos hWacer referencia al GetAll del Service
+		// Debemos hacer referencia al GetAll del Service
 		users, err := s.GetAll(filters, meta.Offset(), meta.Limit()) // Pasamos el filtro al GetAll del Service. Y tambien el Meta de Offset y Limit
 
 		// Si el error es != nill, manejamos con el w.WirteHeader la Bad Request

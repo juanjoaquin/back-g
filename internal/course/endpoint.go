@@ -3,6 +3,7 @@ package course
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/juanjoaquin/back-g/internal/pkg/meta"
 )
@@ -12,6 +13,7 @@ type (
 
 	Endpoints struct {
 		Create Controller
+		GetAll Controller
 	}
 
 	CreateReq struct {
@@ -31,6 +33,7 @@ type (
 func MakeEndpoints(s Service) Endpoints {
 	return Endpoints{
 		Create: makeCreateEndpoint(s),
+		GetAll: makeGetAllEdnpoint(s),
 	}
 }
 
@@ -69,5 +72,37 @@ func makeCreateEndpoint(s Service) Controller {
 			json.NewEncoder(w).Encode(&Response{Status: 400, Err: err.Error()})
 		}
 		json.NewEncoder(w).Encode(&Response{Status: 201, Data: course})
+	}
+}
+
+func makeGetAllEdnpoint(s Service) Controller {
+	return func(w http.ResponseWriter, r *http.Request) {
+		v := r.URL.Query()
+
+		filters := Filters{
+			Name: v.Get("name"),
+		}
+
+		limit, _ := strconv.Atoi(v.Get("limit"))
+		page, _ := strconv.Atoi(v.Get("page"))
+
+		count, err := s.Count(filters)
+		if err != nil {
+			w.WriteHeader(500)
+			json.NewEncoder(w).Encode(&Response{Status: 500, Err: err.Error()})
+			return
+		}
+		meta, err := meta.New(page, limit, count)
+		if err != nil {
+			w.WriteHeader(500)
+			json.NewEncoder(w).Encode(&Response{Status: 500, Err: err.Error()})
+			return
+		}
+		courses, err := s.GetAll(filters, meta.Offset(), meta.Limit())
+		if err != nil {
+			w.WriteHeader(400)
+			json.NewEncoder(w).Encode(&Response{Status: 400, Err: err.Error()})
+		}
+		json.NewEncoder(w).Encode(&Response{Status: 200, Data: courses, Meta: meta})
 	}
 }
