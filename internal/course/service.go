@@ -7,6 +7,12 @@ import (
 
 type Service interface {
 	Create(name, startDate, endDate string) (*Course, error)
+	GetAll(filters Filters, offset, limit int) /* Pasamos el Filtrado de params */ ([]Course, error) // Get All
+	Count(filters Filters) (int, error)
+}
+
+type Filters struct {
+	Name string
 }
 
 type service struct {
@@ -48,4 +54,16 @@ func (s service) Create(name, startDate, endDate string) (*Course, error) {
 	}
 
 	return &course, nil
+}
+
+func (s service) GetAll(filters Filters, offset, limit int) ([]Course, error) {
+	courses, err := s.repo.GetAll(filters, limit, limit)
+	if err != nil {
+		return nil, err
+	}
+	return courses, nil
+}
+
+func (s service) Count(filters Filters) (int, error) {
+	return s.repo.Count(filters)
 }
