@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/juanjoaquin/back-g/internal/pkg/meta"
 )
 
 type (
@@ -60,6 +61,7 @@ type (
 		Status int         `json:"status"`
 		Data   interface{} `json:"data,omitempty"` // Esto es una interface porque le podemos mandar cualquier cosa relacionada a nuestro servicio (usuario, curso, etc).
 		Err    string      `json:"err,omitempty"`  // Usamos el omitempty, esto que si viene vacio lo omite. No lo recibe.
+		Meta   *meta.Meta  `json:"meta,omitempty"` // Devolvemos en la response el Meta (Total pages)
 	}
 )
 
@@ -150,7 +152,22 @@ func makeGetAllEndpoint(s Service) Controller {
 			LastName:  v.Get("last_name"),
 		}
 
-		// Debemos hacer referencia al GetAll del Service
+		// Aqui aplicamos el Counter que hicimos despues de todo esto
+		count, err := s.Count(filters)
+		if err != nil {
+			w.WriteHeader(500)
+			json.NewEncoder(w).Encode(&Response{Status: 500, Err: err.Error()})
+			return
+		}
+		// Nos traemos el Package de Meta de la función New del propio package
+		meta, err := meta.New(count)
+		if err != nil {
+			w.WriteHeader(500)
+			json.NewEncoder(w).Encode(&Response{Status: 500, Err: err.Error()})
+			return
+		}
+
+		// Debemos hWacer referencia al GetAll del Service
 		users, err := s.GetAll(filters) // Pasamos el filtro al GetAll del Service
 
 		// Si el error es != nill, manejamos con el w.WirteHeader la Bad Request
@@ -159,8 +176,8 @@ func makeGetAllEndpoint(s Service) Controller {
 			json.NewEncoder(w).Encode(&Response{Status: 400, Err: err.Error()})
 			return
 		}
-		// Lo devolvemos con la nueva struct de Response
-		json.NewEncoder(w).Encode(&Response{Status: 200, Data: users})
+		// Lo devolvemos con la nueva struct de Response & Devolvemos el package de Meta (previamente traido arriba)
+		json.NewEncoder(w).Encode(&Response{Status: 200, Data: users, Meta: meta})
 	}
 }
 

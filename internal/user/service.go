@@ -11,6 +11,7 @@ type Service interface {
 	Get(id string) (*User, error)                                               // Get by User ID
 	Delete(id string) error
 	Update(id string, firstName *string, lastName *string, email *string, phone *string) error
+	Count(filters Filters) (int, error)
 }
 
 // Struct de Filter params:
@@ -94,4 +95,9 @@ func (s service) Delete(id string) error {
 
 func (s service) Update(id string, firstName *string, lastName *string, email *string, phone *string) error {
 	return s.repo.Update(id, firstName, lastName, email, phone)
+}
+
+// Pasamos el Count en el Service
+func (s service) Count(filters Filters) (int, error) {
+	return s.repo.Count(filters)
 }

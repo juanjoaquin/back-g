@@ -15,6 +15,7 @@ type Repository interface {
 	Get(id string) (*User, error)                                     // El Get by ID, nos devuelve un ID, y un puntero de User
 	Delete(id string) error
 	Update(id string, firstName *string, lastName *string, email *string, phone *string) error
+	Count(filters Filters) (int, error) // Devuelve la cantidad de registros
 }
 
 // Esta struct va hacer referencia a la DB de GORM
@@ -165,4 +166,15 @@ func applyFilters(tx *gorm.DB, filters Filters) *gorm.DB {
 	}
 
 	return tx
+}
+
+// FUNCION PARA EL CONTADOR DEL REGISTRO
+func (repo *repo) Count(filters Filters) (int, error) {
+	var count int64
+	tx := repo.db.Model(User{})
+	tx = applyFilters(tx, filters)
+	if err := tx.Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return int(count), nil
 }
