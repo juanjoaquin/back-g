@@ -30,6 +30,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/gorilla/mux"
+	"github.com/juanjoaquin/back-g/internal/course"
 	"github.com/juanjoaquin/back-g/internal/pkg/bootsrap"
 	"github.com/juanjoaquin/back-g/internal/user" // Importamos el package user
 )
@@ -115,6 +116,14 @@ func main() {
 		En esta tendremos todos los packages internos propios. No lo trabajaremos con packages externos. Para ello debemos crear una folder llamada "pkg".
 		Dentro de internal, respetamos todos los procesos internos, ya sea interno de nuestro proyecto, o externos que nos pertenezcan.
 	*/
+
+	/* Generamos el Repo del Course */
+	courseRepository := course.NewRepo(l, db)
+	courseService := course.NewService(l, courseRepository)
+	courseEndpoint := course.MakeEndpoints(courseService)
+
+	router.HandleFunc("/courses", courseEndpoint.Create).Methods("GET")
+	router.HandleFunc("/courses", courseEndpoint.Create).Methods("POST")
 
 	// 6. Creamos nuestro servidor para poder levantarlo.
 	srv := &http.Server{
