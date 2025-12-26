@@ -5,7 +5,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -37,8 +36,11 @@ func NewRepo(log *log.Logger, db *gorm.DB) Repository {
 func (repo *repo) Create(user *User) error {
 	repo.log.Println(user) // Este loguer es el que nosotros le hemos pasado. Es lo que imprimira al pegarle al POST
 
+	/* Esto no lo usamos mas. Le quitamos la responsabilidad al Repository y lo usamos con GORM-HOOKS para crear el ID.
+	Ahora se encarga el Dominio */
 	/* Nuestro ID es UUID, entonces debemos definirle ese UUID desde esta capa (tenemos que usar el package de google/uuid) */
-	user.ID = uuid.New().String()
+
+	// user.ID = uuid.New().String()
 
 	/* Tenemos que hacer del objeto  de "db" el metodo "Create", llamando a nuestra Struct (repo) que le debemos pasar la entidad del User */
 	result := repo.db.Create(user)
