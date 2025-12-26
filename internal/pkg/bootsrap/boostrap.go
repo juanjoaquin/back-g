@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/user"
 
+	"github.com/juanjoaquin/back-g/internal/course"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -39,6 +40,10 @@ func DBConnection() (*gorm.DB, error) {
 	// Debemos hacer el Auto Migrate a traves de las variables de entorno
 	if os.Getenv("DATABASE_MIGRATE") == "true" {
 		if err := db.AutoMigrate(&user.User{}); err != nil {
+			return nil, err
+		}
+
+		if err := db.AutoMigrate(&course.Course{}); err != nil {
 			return nil, err
 		}
 	}
