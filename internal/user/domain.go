@@ -3,6 +3,7 @@ package user
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -19,4 +20,12 @@ type User struct {
 	// Agregamos el campo de Deleted, que es como un Soft Delete de GORM.
 	// Nos muestra un registro de los Soft Deleted Users
 	Deleted gorm.DeletedAt `json:"-"`
+}
+
+// Esta función genera un UUID al crear un User. Anteriormente esto lo hacia el Repository
+func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
+	if u.ID == "" {
+		u.ID = uuid.New().String()
+	}
+	return
 }
