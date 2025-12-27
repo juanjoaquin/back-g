@@ -1,4 +1,4 @@
-package user
+package domain
 
 import (
 	"time"
@@ -15,6 +15,7 @@ type User struct {
 	LastName  string     `json:"last_name" gorm:"type:char(50);not null"`
 	Email     string     `json:"email" gorm:"type:char(50);not null"`
 	Phone     string     `json:"phone" gorm:"type:char(30);not null"`
+	Course    *Course    `gorm:"-"`
 	CreatedAt *time.Time `json:"-"`
 	UpdatedAt *time.Time `json:"-"`
 	// Agregamos el campo de Deleted, que es como un Soft Delete de GORM.

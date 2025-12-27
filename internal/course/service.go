@@ -3,12 +3,14 @@ package course
 import (
 	"log"
 	"time"
+
+	"github.com/juanjoaquin/back-g/internal/domain"
 )
 
 type Service interface {
-	Create(name, startDate, endDate string) (*Course, error)
-	GetAll(filters Filters, offset, limit int) /* Pasamos el Filtrado de params */ ([]Course, error) // Get All
-	Get(id string) (*Course, error)
+	Create(name, startDate, endDate string) (*domain.Course, error)
+	GetAll(filters Filters, offset, limit int) /* Pasamos el Filtrado de params */ ([]domain.Course, error) // Get All
+	Get(id string) (*domain.Course, error)
 	Count(filters Filters) (int, error)
 	Delete(id string) error
 	Update(id string, name, startDate, endDate *string) error // Los dates fueron parseados a string
@@ -31,7 +33,7 @@ func NewService(log *log.Logger, repo Repository) Service {
 	}
 }
 
-func (s service) Create(name, startDate, endDate string) (*Course, error) {
+func (s service) Create(name, startDate, endDate string) (*domain.Course, error) {
 
 	// Parseamos para los valores de Fecha
 	startDateParsed, err := time.Parse("2006-01-02", startDate)
@@ -46,7 +48,7 @@ func (s service) Create(name, startDate, endDate string) (*Course, error) {
 		return nil, err
 	}
 
-	course := Course{
+	course := domain.Course{
 		Name:      name,
 		StartDate: startDateParsed,
 		EndDate:   endDateParsed,
@@ -59,7 +61,7 @@ func (s service) Create(name, startDate, endDate string) (*Course, error) {
 	return &course, nil
 }
 
-func (s service) GetAll(filters Filters, offset, limit int) ([]Course, error) {
+func (s service) GetAll(filters Filters, offset, limit int) ([]domain.Course, error) {
 	courses, err := s.repo.GetAll(filters, offset, limit)
 
 	if err != nil {
@@ -68,7 +70,7 @@ func (s service) GetAll(filters Filters, offset, limit int) ([]Course, error) {
 	return courses, nil
 }
 
-func (s service) Get(id string) (*Course, error) {
+func (s service) Get(id string) (*domain.Course, error) {
 
 	course, err := s.repo.Get(id)
 

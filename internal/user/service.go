@@ -1,14 +1,18 @@
 package user
 
-import "log"
+import (
+	"log"
+
+	"github.com/juanjoaquin/back-g/internal/domain"
+)
 
 // Nuestro servicio lo vamos a menajar con interfaces. Esto nos facilitara para mockearlo, o utilizarlo de forma mas generica
 type Service interface {
 	/* 	1. Vamos a definirle los metodos de los Endpoints que fuimos utilizando.
 	   	Le pasaremos tambien los elementos del body del Create por ejemplo */
-	Create(firstName, lastName, email, phone string) (*User, error)
-	GetAll(filters Filters, offset, limit int) /* Pasamos el Filtrado de params */ ([]User, error) // Get All
-	Get(id string) (*User, error)                                                                  // Get by User ID
+	Create(firstName, lastName, email, phone string) (*domain.User, error)
+	GetAll(filters Filters, offset, limit int) /* Pasamos el Filtrado de params */ ([]domain.User, error) // Get All
+	Get(id string) (*domain.User, error)                                                                  // Get by User ID
 	Delete(id string) error
 	Update(id string, firstName *string, lastName *string, email *string, phone *string) error
 	Count(filters Filters) (int, error)
@@ -39,12 +43,12 @@ func NewService(log *log.Logger, repo Repository) Service {
 }
 
 /* 4. Vamos a generar un metodo, que esto se lo deberemos pasar a la funcion de NewService. */
-func (s service) Create(firstName, lastName, email, phone string) (*User, error) {
+func (s service) Create(firstName, lastName, email, phone string) (*domain.User, error) {
 
 	s.log.Println("Create user service")
 
 	/* Ahora para crear el endpoint, pasamos los valores que tenemos del User */
-	user := User{
+	user := domain.User{
 		// Una vez terminado esto, se lo debemos pasar al Repositorio
 		FirstName: firstName,
 		LastName:  lastName,
@@ -62,7 +66,7 @@ func (s service) Create(firstName, lastName, email, phone string) (*User, error)
 }
 
 /* Get All de los Users */
-func (s service) GetAll(filters Filters, offset, limit int) /* Pasamos el Search Params */ ([]User, error) {
+func (s service) GetAll(filters Filters, offset, limit int) /* Pasamos el Search Params */ ([]domain.User, error) {
 
 	/* Traemos a los Users y usamos nos traemos el .GetAll() de la Interface del Service (s.repo), que previamente declaramos en nuestro Repository (GetAll) */
 	users, err := s.repo.GetAll(filters, offset, limit) // Tambien le pasamos el Search Params
@@ -77,7 +81,7 @@ func (s service) GetAll(filters Filters, offset, limit int) /* Pasamos el Search
 
 }
 
-func (s service) Get(id string) (*User, error) {
+func (s service) Get(id string) (*domain.User, error) {
 	user, err := s.repo.Get(id)
 
 	// Handleo error

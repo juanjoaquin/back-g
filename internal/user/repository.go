@@ -5,13 +5,14 @@ import (
 	"log"
 	"strings"
 
+	"github.com/juanjoaquin/back-g/internal/domain"
 	"gorm.io/gorm"
 )
 
 type Repository interface {
-	Create(user *User) error                                                                 // Le pasamos como puntero al User
-	GetAll(filters Filters, offset int, limit int) /* Pasamos el Filtrado */ ([]User, error) // El Get all, nos devuelve un array de usuarios
-	Get(id string) (*User, error)                                                            // El Get by ID, nos devuelve un ID, y un puntero de User
+	Create(user *domain.User) error                                                                 // Le pasamos como puntero al User
+	GetAll(filters Filters, offset int, limit int) /* Pasamos el Filtrado */ ([]domain.User, error) // El Get all, nos devuelve un array de usuarios
+	Get(id string) (*domain.User, error)                                                            // El Get by ID, nos devuelve un ID, y un puntero de User
 	Delete(id string) error
 	Update(id string, firstName *string, lastName *string, email *string, phone *string) error
 	Count(filters Filters) (int, error) // Devuelve la cantidad de registros
@@ -33,13 +34,12 @@ func NewRepo(log *log.Logger, db *gorm.DB) Repository {
 }
 
 // Creamos el Metodo Create
-func (repo *repo) Create(user *User) error {
+func (repo *repo) Create(user *domain.User) error {
 	repo.log.Println(user) // Este loguer es el que nosotros le hemos pasado. Es lo que imprimira al pegarle al POST
 
 	/* Esto no lo usamos mas. Le quitamos la responsabilidad al Repository y lo usamos con GORM-HOOKS para crear el ID.
 	Ahora se encarga el Dominio */
 	/* Nuestro ID es UUID, entonces debemos definirle ese UUID desde esta capa (tenemos que usar el package de google/uuid) */
-
 	// user.ID = uuid.New().String()
 
 	/* Tenemos que hacer del objeto  de "db" el metodo "Create", llamando a nuestra Struct (repo) que le debemos pasar la entidad del User */
@@ -64,8 +64,8 @@ func (repo *repo) Create(user *User) error {
 }
 
 // Creamo el Metodo Get All
-func (repo *repo) GetAll(filters Filters, offset, limit int) ([]User, error) {
-	var u []User // Declaramos la variable user. Que sera un vector de usuarios
+func (repo *repo) GetAll(filters Filters, offset, limit int) ([]domain.User, error) {
+	var u []domain.User // Declaramos la variable user. Que sera un vector de usuarios
 
 	// Debemos traernos el Model del User
 	tx := repo.db.Model(u)
@@ -94,9 +94,9 @@ func (repo *repo) GetAll(filters Filters, offset, limit int) ([]User, error) {
 }
 
 // Creamo el Metodo Get By ID
-func (repo *repo) Get(id string) (*User, error) {
+func (repo *repo) Get(id string) (*domain.User, error) {
 	/* Primero debemos generar una estructura User para poder pasarle el ID a GORM */
-	user := User{ID: id}
+	user := domain.User{ID: id}
 
 	/* Para buscar la informacion, utilizamos el .First() con el puntero en el User.  */
 	result := repo.db.First(&user) // First es el primer elemento que encuentra
@@ -114,7 +114,7 @@ func (repo *repo) Get(id string) (*User, error) {
 // Creamos el Metodo DELETE
 func (repo *repo) Delete(id string) error {
 	/* Primero debemos generar una estructura User para poder pasarle el ID a GORM */
-	user := User{ID: id}
+	user := domain.User{ID: id}
 
 	result := repo.db.Delete(&user) // El metodo que se usa es el .DELETE
 
@@ -149,7 +149,7 @@ func (repo *repo) Update(id string, firstName *string, lastName *string, email *
 		values["phone"] = *phone
 	}
 
-	if result := repo.db.Model(&User{}).Where("id = ?", id).Updates(values); result.Error != nil {
+	if result := repo.db.Model(&domain.User{}).Where("id = ?", id).Updates(values); result.Error != nil {
 		return result.Error
 	}
 
@@ -175,7 +175,7 @@ func applyFilters(tx *gorm.DB, filters Filters) *gorm.DB {
 // FUNCION PARA EL CONTADOR DEL REGISTRO
 func (repo *repo) Count(filters Filters) (int, error) {
 	var count int64
-	tx := repo.db.Model(User{})
+	tx := repo.db.Model(domain.User{})
 	tx = applyFilters(tx, filters)
 	if err := tx.Count(&count).Error; err != nil {
 		return 0, err
