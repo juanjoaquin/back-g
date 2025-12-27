@@ -122,7 +122,8 @@ func main() {
 	courseService := course.NewService(l, courseRepository)
 	courseEndpoint := course.MakeEndpoints(courseService)
 
-	router.HandleFunc("/courses", courseEndpoint.Create).Methods("GET")
+	router.HandleFunc("/courses", courseEndpoint.GetAll).Methods("GET")
+	router.HandleFunc("/courses/{id}", courseEndpoint.Get).Methods("GET")
 	router.HandleFunc("/courses", courseEndpoint.Create).Methods("POST")
 
 	// 6. Creamos nuestro servidor para poder levantarlo.

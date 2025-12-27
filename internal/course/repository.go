@@ -10,6 +10,7 @@ import (
 
 type Repository interface {
 	Create(course *Course) error
+	Get(id string) (*Course, error)
 	GetAll(filters Filters, offset int, limit int) ([]Course, error)
 	Count(filters Filters) (int, error)
 }
@@ -40,7 +41,9 @@ func (repo *repo) Create(course *Course) error {
 func (repo *repo) GetAll(filters Filters, offset, limit int) ([]Course, error) {
 	var c []Course
 
-	tx := repo.db.Model(c)
+	log.Println("REPO => ejecutando query...")
+
+	tx := repo.db.Model(&Course{})
 	tx = applyFilters(tx, filters)
 
 	tx = tx.Limit(limit).Offset(offset)
@@ -73,4 +76,16 @@ func (repo *repo) Count(filters Filters) (int, error) {
 		return 0, err
 	}
 	return int(count), nil
+}
+
+func (repo *repo) Get(id string) (*Course, error) {
+	course := Course{ID: id}
+
+	result := repo.db.Find(&course)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &course, nil
 }
