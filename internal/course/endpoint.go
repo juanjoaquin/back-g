@@ -16,12 +16,20 @@ type (
 		Create Controller
 		GetAll Controller
 		Get    Controller
+		Delete Controller
+		Update Controller
 	}
 
 	CreateReq struct {
 		Name      string `json:"name"`
 		StartDate string `json:"start_date"`
 		EndDate   string `json:"end_date"`
+	}
+
+	UpdateReq struct {
+		Name      *string `json:"name"`
+		StartDate *string `json:"start_date"`
+		EndDate   *string `json:"end_date"`
 	}
 
 	Response struct {
@@ -37,6 +45,8 @@ func MakeEndpoints(s Service) Endpoints {
 		Create: makeCreateEndpoint(s),
 		GetAll: makeGetAllEdnpoint(s),
 		Get:    makeGetEndpoint(s),
+		Delete: makeDeleteEndpoint(s),
+		Update: makeUpdateEndpoint(s),
 	}
 }
 
@@ -122,5 +132,66 @@ func makeGetEndpoint(s Service) Controller {
 		}
 
 		json.NewEncoder(w).Encode(&Response{Status: 200, Data: course})
+	}
+}
+
+func makeDeleteEndpoint(s Service) Controller {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		path := mux.Vars(r)
+
+		id := path["id"]
+
+		if err := s.Delete(id); err != nil {
+			w.WriteHeader(404)
+			json.NewEncoder(w).Encode(&Response{
+				Status: 404,
+				Err:    err.Error(),
+			})
+		}
+
+		json.NewEncoder(w).Encode(map[string]string{"data": "success"})
+	}
+}
+
+func makeUpdateEndpoint(s Service) Controller {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req UpdateReq
+
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			w.WriteHeader(400)
+			json.NewEncoder(w).Encode(&Response{Status: 400, Err: "Invalid request format"})
+			return
+		}
+
+		if req.Name != nil && *req.Name == "" {
+			w.WriteHeader(400)
+			json.NewEncoder(w).Encode(&Response{Status: 400, Err: "Name is required"})
+			return
+		}
+
+		if req.StartDate != nil && *req.StartDate == "" {
+			w.WriteHeader(400)
+			json.NewEncoder(w).Encode(&Response{Status: 400, Err: "Name is required"})
+			return
+		}
+
+		if req.EndDate != nil && *req.EndDate == "" {
+			w.WriteHeader(400)
+			json.NewEncoder(w).Encode(&Response{Status: 400, Err: "Name is required"})
+			return
+		}
+
+		path := mux.Vars(r)
+		id := path["id"]
+
+		if err := s.Update(id, req.Name, req.StartDate, req.EndDate); err != nil {
+			w.WriteHeader(404)
+			json.NewEncoder(w).Encode(&Response{Status: 404, Err: "Course doesnt exist"})
+			return
+		}
+
+		json.NewEncoder(w).Encode(&Response{Status: 200, Data: "Success"})
+
 	}
 }
