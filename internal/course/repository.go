@@ -5,6 +5,8 @@ import (
 	"log"
 	"strings"
 
+	"time"
+
 	"gorm.io/gorm"
 )
 
@@ -12,7 +14,9 @@ type Repository interface {
 	Create(course *Course) error
 	Get(id string) (*Course, error)
 	GetAll(filters Filters, offset int, limit int) ([]Course, error)
+	Delete(id string) error
 	Count(filters Filters) (int, error)
+	Update(id string, name *string, startDate, endDate *time.Time) error
 }
 
 type repo struct {
@@ -57,17 +61,6 @@ func (repo *repo) GetAll(filters Filters, offset, limit int) ([]Course, error) {
 	return c, nil
 }
 
-// FUNCION PARA EL APLICADO DE FILTROS
-func applyFilters(tx *gorm.DB, filters Filters) *gorm.DB {
-
-	if filters.Name != "" { // Basicamente que si viene vacio, no pasa nada, y que lo devuelva en lower o uppercase
-		filters.Name = fmt.Sprintf("%%%s%%", strings.ToLower(filters.Name))
-		tx = tx.Where("lower(name) like ?", filters.Name) // Query de GORM para la consulta
-	}
-
-	return tx
-}
-
 func (repo *repo) Count(filters Filters) (int, error) {
 	var count int64
 	tx := repo.db.Model(Course{})
@@ -81,11 +74,57 @@ func (repo *repo) Count(filters Filters) (int, error) {
 func (repo *repo) Get(id string) (*Course, error) {
 	course := Course{ID: id}
 
-	result := repo.db.Find(&course)
+	result := repo.db.First(&course)
 
 	if result.Error != nil {
 		return nil, result.Error
 	}
 
 	return &course, nil
+}
+
+func (repo *repo) Delete(id string) error {
+	course := Course{ID: id}
+
+	result := repo.db.Delete(&course)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
+}
+
+func (repo *repo) Update(id string, name *string, startDate *time.Time, endDate *time.Time) error {
+	values := make(map[string]interface{})
+
+	if name != nil {
+		values["name"] = *name
+	}
+
+	if startDate != nil {
+		values["start_date"] = *startDate
+	}
+
+	if endDate != nil {
+		values["end_date"] = *endDate
+	}
+
+	if result := repo.db.Model(&Course{}).Where("id = ?", id).Updates(values); result.Error != nil {
+		return result.Error
+	}
+
+	return nil
+
+}
+
+// FUNCION PARA EL APLICADO DE FILTROS
+func applyFilters(tx *gorm.DB, filters Filters) *gorm.DB {
+
+	if filters.Name != "" { // Basicamente que si viene vacio, no pasa nada, y que lo devuelva en lower o uppercase
+		filters.Name = fmt.Sprintf("%%%s%%", strings.ToLower(filters.Name))
+		tx = tx.Where("lower(name) like ?", filters.Name) // Query de GORM para la consulta
+	}
+
+	return tx
 }

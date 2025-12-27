@@ -125,6 +125,8 @@ func main() {
 	router.HandleFunc("/courses", courseEndpoint.GetAll).Methods("GET")
 	router.HandleFunc("/courses/{id}", courseEndpoint.Get).Methods("GET")
 	router.HandleFunc("/courses", courseEndpoint.Create).Methods("POST")
+	router.HandleFunc("/courses/{id}", courseEndpoint.Update).Methods("PATCH")
+	router.HandleFunc("/courses/{id}", courseEndpoint.Delete).Methods("DELETE")
 
 	// 6. Creamos nuestro servidor para poder levantarlo.
 	srv := &http.Server{

@@ -10,6 +10,8 @@ type Service interface {
 	GetAll(filters Filters, offset, limit int) /* Pasamos el Filtrado de params */ ([]Course, error) // Get All
 	Get(id string) (*Course, error)
 	Count(filters Filters) (int, error)
+	Delete(id string) error
+	Update(id string, name, startDate, endDate *string) error // Los dates fueron parseados a string
 }
 
 type Filters struct {
@@ -79,4 +81,32 @@ func (s service) Get(id string) (*Course, error) {
 
 func (s service) Count(filters Filters) (int, error) {
 	return s.repo.Count(filters)
+}
+
+func (s service) Delete(id string) error {
+	return s.repo.Delete(id)
+}
+
+func (s service) Update(id string, name, startDate, endDate *string) error {
+	var startDateParsed, endDateParsed *time.Time
+
+	if startDate != nil {
+		date, err := time.Parse("2006-01-02", *startDate)
+		if err != nil {
+			s.log.Println(err)
+			return err
+		}
+		startDateParsed = &date
+	}
+
+	if endDate != nil {
+		date, err := time.Parse("2006-01-02", *endDate)
+		if err != nil {
+			s.log.Println(err)
+			return err
+		}
+		endDateParsed = &date
+	}
+
+	return s.repo.Update(id, name, startDateParsed, endDateParsed)
 }
