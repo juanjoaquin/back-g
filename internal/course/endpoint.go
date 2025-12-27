@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/gorilla/mux"
 	"github.com/juanjoaquin/back-g/internal/pkg/meta"
 )
 
@@ -14,6 +15,7 @@ type (
 	Endpoints struct {
 		Create Controller
 		GetAll Controller
+		Get    Controller
 	}
 
 	CreateReq struct {
@@ -34,6 +36,7 @@ func MakeEndpoints(s Service) Endpoints {
 	return Endpoints{
 		Create: makeCreateEndpoint(s),
 		GetAll: makeGetAllEdnpoint(s),
+		Get:    makeGetEndpoint(s),
 	}
 }
 
@@ -104,5 +107,20 @@ func makeGetAllEdnpoint(s Service) Controller {
 			json.NewEncoder(w).Encode(&Response{Status: 400, Err: err.Error()})
 		}
 		json.NewEncoder(w).Encode(&Response{Status: 200, Data: courses, Meta: meta})
+	}
+}
+
+func makeGetEndpoint(s Service) Controller {
+	return func(w http.ResponseWriter, r *http.Request) {
+		path := mux.Vars(r)
+		id := path["id"]
+		course, err := s.Get(id)
+
+		if err != nil {
+			w.WriteHeader(404)
+			json.NewEncoder(w).Encode(&Response{Status: 400, Err: "Usuario no encontrado"})
+		}
+
+		json.NewEncoder(w).Encode(&Response{Status: 200, Data: course})
 	}
 }

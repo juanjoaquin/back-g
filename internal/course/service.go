@@ -8,6 +8,7 @@ import (
 type Service interface {
 	Create(name, startDate, endDate string) (*Course, error)
 	GetAll(filters Filters, offset, limit int) /* Pasamos el Filtrado de params */ ([]Course, error) // Get All
+	Get(id string) (*Course, error)
 	Count(filters Filters) (int, error)
 }
 
@@ -57,11 +58,23 @@ func (s service) Create(name, startDate, endDate string) (*Course, error) {
 }
 
 func (s service) GetAll(filters Filters, offset, limit int) ([]Course, error) {
-	courses, err := s.repo.GetAll(filters, limit, limit)
+	courses, err := s.repo.GetAll(filters, offset, limit)
+
 	if err != nil {
 		return nil, err
 	}
 	return courses, nil
+}
+
+func (s service) Get(id string) (*Course, error) {
+
+	course, err := s.repo.Get(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return course, nil
 }
 
 func (s service) Count(filters Filters) (int, error) {
