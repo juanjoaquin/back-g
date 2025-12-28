@@ -31,6 +31,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/juanjoaquin/back-g/internal/course"
+	"github.com/juanjoaquin/back-g/internal/enrollment"
 	"github.com/juanjoaquin/back-g/internal/pkg/bootsrap"
 	"github.com/juanjoaquin/back-g/internal/user" // Importamos el package user
 )
@@ -127,6 +128,13 @@ func main() {
 	router.HandleFunc("/courses", courseEndpoint.Create).Methods("POST")
 	router.HandleFunc("/courses/{id}", courseEndpoint.Update).Methods("PATCH")
 	router.HandleFunc("/courses/{id}", courseEndpoint.Delete).Methods("DELETE")
+
+	/* Generamos el Repo del Enrollment */
+	enrollmentRepository := enrollment.NewRepo(l, db)
+	enrollmentService := enrollment.NewService(l, enrollmentRepository)
+	enrollmentEndpoint := enrollment.MakeEndpoints(enrollmentService)
+
+	router.HandleFunc("/enrollments", enrollmentEndpoint.Create).Methods("POST")
 
 	// 6. Creamos nuestro servidor para poder levantarlo.
 	srv := &http.Server{
