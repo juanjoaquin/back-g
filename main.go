@@ -131,7 +131,7 @@ func main() {
 
 	/* Generamos el Repo del Enrollment */
 	enrollmentRepository := enrollment.NewRepo(l, db)
-	enrollmentService := enrollment.NewService(l, enrollmentRepository)
+	enrollmentService := enrollment.NewService(l, userService, courseService, enrollmentRepository)
 	enrollmentEndpoint := enrollment.MakeEndpoints(enrollmentService)
 
 	router.HandleFunc("/enrollments", enrollmentEndpoint.Create).Methods("POST")
